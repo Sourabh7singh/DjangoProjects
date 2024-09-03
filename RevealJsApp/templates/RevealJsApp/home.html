@@ -1,0 +1,153 @@
+{% extends "RevealJsApp/base.html" %}
+
+{% block title %}Md to Presentations{% endblock title %}
+
+{% block head %}
+<style>
+    .home {
+        height: calc(100vh - 56px - 100px); 
+        display: flex;
+        flex-direction: row;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .file-list {
+        border-right: 1px solid #ddd;
+        overflow-y: auto;
+        transition: opacity 0.3s ease;
+        flex: 1;
+    }
+
+    .file-list.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .preview {
+        display: none;
+        flex: 3;
+    }
+
+    .content-area {
+        flex: 3;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #editor {
+        height: 100%;
+        flex: 1;
+    }
+
+    .btn {
+        background-color: blue;
+        color: white;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        margin: 5px;
+        border: 4px solid transparent;
+        border-radius: 10px;
+    }
+
+    .active {
+        border: 4px solid black;
+    }
+
+    .right a {
+        text-decoration: none;
+    }
+</style>
+{% endblock head %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <button class="btn btn-primary me-2" onclick="saveFileContent()">Save</button>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-secondary me-2" id="previewbtn" onclick="previewFileContent()">Preview</button>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-info me-2" id="backbtn" onclick="showFileList()">Back to File List</button>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-success" onclick="createNewFile()">New File</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="d-flex align-items-center ms-auto">
+            <button class="btn btn-warning d-flex justify-content-center align-items-center" id="run" onclick="runCode()">
+                <span class="spinner-border spinner-border-sm d-none" id="loader" role="status" aria-hidden="true"></span>
+                Run
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="home">
+    <input type="hidden" id="file_id">
+    <div class="file-list">
+        <h3>Files</h3>
+        <ul class="list-group">
+            {% for file in files %}
+            <li class="list-group-item list-group-item-action" style="cursor: pointer;" onclick="loadFileContent('{{ file.id }}')" value="{{ file.id }}">{{ file.title }}.md</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="resizer" onmousedown="startResizing(event)"></div> <!-- Resizer div -->
+    <div class="preview">
+        <iframe src="" class="w-100 h-100 border-0"></iframe>
+    </div>
+
+    <div class="content-area">
+        <h3>File Content</h3>
+        <!-- Monaco Editor will be initialized in this div -->
+        <div id="editor"></div>
+        <input type="hidden" id="file-name">
+    </div>
+</div>
+
+<script>
+    // Load Monaco Editor and initialize it
+    var editor;
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('editor'), {
+            value: '',
+            language: 'markdown',
+            theme: 'vs-light',
+            automaticLayout: true,
+        });
+    });
+
+    // Function to update slides
+    function UpdateSlides() {
+        const mdContent = editor.getValue();
+        console.log(mdContent);
+    }
+
+    function loadFileContent(fileId) {
+        document.getElementById("file_id").value = fileId;
+        fetch(`/reveal/get-content/${fileId}`)
+            .then(response => response.json())
+            .then(text => {
+                let content = text['content'];
+                editor.setValue(content);
+                editor.updateOptions({ readOnly: false });
+                document.getElementById('file-name').value = text['file_name'];
+            });
+    }
+</script>
+{% endblock content %}
+    

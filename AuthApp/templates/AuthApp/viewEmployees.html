@@ -1,0 +1,38 @@
+{% extends "AuthApp/base.html" %}
+{% block title %}
+    User Signup
+{% endblock%}
+{% block content %}
+    <div class='container mt-3 font-monospace'>
+        <h1>Employee List</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Address</th>
+                        <th>Phone</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                        <tr>
+                            <td>{{ employee.name }}</td>
+                            <td>{{ employee.department }}</td>
+                            <td>{{ employee.address }}</td>
+                            <td>{{ employee.phone }}</td>
+                            <td>{{ employee.user.username }}</td>
+                            <td>{{ employee.user.email }}</td>
+                            <td><a href="{% url 'edit-employee' employee.user.username %}" class="btn btn-primary">Update Details</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="{% url 'index' %}" class="btn btn-primary">Add Employee</a>
+    </div>
+{% endblock %}
