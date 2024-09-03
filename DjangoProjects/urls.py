@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/',include('AuthApp.urls')),
-    path('',include('CodeEditor.urls')),
+    path('code-editor/',include('CodeEditor.urls')),
     # path('odd-even/',include('odd_even.urls')),
     path('reveal/',include('RevealJsApp.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

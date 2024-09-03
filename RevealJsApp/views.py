@@ -1,17 +1,35 @@
+import json
 import os
+from turtle import title
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
 from django.conf import settings
-from .models import RevealJsApp
+from flask import redirect
+from .models import slides
 class Index(View):
     def get(self, request):
-        files = RevealJsApp.objects.all()
+        files = slides.objects.all()
         return render(request, 'RevealJsApp/home.html',{'files':files})
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            file_id = data['id']
+            title = data['title']
+            content = data['content']
+            file = slides.objects.get(id=file_id)
+            file.title = title
+            file.content = content
+            file.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            print(f'Error saving file: {e}')
+            return JsonResponse({'error': 'Failed to save file'})
     
 class ModeledData(View):
     def get(self, request,title):
-        data = RevealJsApp.objects.get(title=title).data
+        data = slides.objects.get(title=title).data
         return render(request, 'RevealJsApp/index.html',{'file_data':data})
     
 class EditableMarkdown(View):
@@ -28,5 +46,14 @@ class EditableMarkdown(View):
 
 class GetFileContent(View):
     def get(self, request, file_id):
-        file = RevealJsApp.objects.get(id=file_id)
+        file = slides.objects.get(id=file_id)
         return JsonResponse({'title':file.title,'content': file.content}) 
+    
+def create_file(request):
+    file_name = request.POST.get('file_name')
+    if file_name:
+        slides.objects.create(title=file_name, content="")
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+ 
+
