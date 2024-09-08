@@ -323,3 +323,32 @@ function runCode() {
         document.getElementById('loader').classList.add('d-none');
     });
 }
+
+
+function deleteFile(fileId, event) {
+    event.stopPropagation(); // Prevent triggering the loadFileContent function
+
+    if (confirm('Are you sure you want to delete this file?')) {
+        fetch(`/code-editor/delete-file/${fileId}/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('File deleted successfully!');
+                // Reload the file list or update the UI as needed
+                window.location.reload();
+            } else {
+                alert('Error deleting file.');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting file:', error);
+            alert('Failed to delete file.');
+        });
+    }
+}

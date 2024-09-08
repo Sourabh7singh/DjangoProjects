@@ -7,6 +7,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Editor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
+    <script src="{% static 'scripts/deck.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'styles/codeEditor.css' %}">
+</head>
+<body>
+    {% comment %} <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+        <div class="container-fluid">
+            <!-- Brand or Logo -->
+            <a class="navbar-brand" href="/">Home</a>
+            
+            <!-- Toggler Button for Mobile View -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/code-editor/">Code Editor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reveal/">Markdown Presentation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+     {% endcomment %}
+     {% include "HomePage/navbar.html" %}
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <div class="navbar-nav">
+                <button class="btn btn-primary me-2 mb-2 mb-lg-0" onclick="saveFileContent()">Save</button>
+                <button class="btn btn-secondary me-2 mb-2 mb-lg-0" id="previewbtn" onclick="previewFileContent()">Preview</button>
+                <button class="btn btn-info me-2 mb-2 mb-lg-0 back-button" id="backbtn" onclick="showFileList()">Back to File List</button>
+                <button class="btn btn-success mb-2 mb-lg-0" onclick="createNewFile()">New File</button>
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <button class="btn btn-warning d-flex justify-content-center align-items-center" id="run" onclick="runCode()">
+                    <span class="spinner-border spinner-border-sm d-none" id="loader" role="status" aria-hidden="true"></span>
+                    Run
+                </button>
+                <select style="cursor: pointer;" id="language-select" class="form-select" onchange="changeLanguage()">
+                    <option value="md">Markdown</option>
+                    <option value="js">JavaScript</option>
+                    <option value="py">Python</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="json">JSON</option>
+                    <option value="tsx">TypeScript</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+
+    <div class="home">
+        <input type="hidden" id="file_id">
+        <div class="file-list">
+            <h3>Files</h3>
+            <ul class="list-group">
+                {% for file in md_files %}
+                <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" style="cursor: pointer;" onclick="loadFileContent('{{ file.id }}')" value="{{ file.id }}">
+                    {{ file.file_name }}.{{ file.language }}
+                    <button class="btn btn-danger btn-sm" onclick="deleteFile({{ file.id }}, event)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="preview">
+            <iframe src="" class="w-100 h-100 border-0"></iframe>
+        </div>
+
+        <div class="content-area">
+            <h3>File Content</h3>
+            <div id="editor"></div>
+            <input type="hidden" id="file-name">
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
+{% comment %} {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
     <script src="{% static 'scripts/deck.js' %}"></script>
     <link rel="stylesheet" href="{% static 'styles/codeEditor.css' %}">
@@ -88,4 +190,4 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html> {% endcomment %}

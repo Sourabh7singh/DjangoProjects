@@ -110,3 +110,23 @@ def run_code(request):
             return JsonResponse({'error': 'Unsupported language'})
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+
+# views.py
+from django.http import JsonResponse
+from django.views.generic.edit import DeleteView
+from django.urls import reverse_lazy
+
+class FileDeleteView(DeleteView):
+    model = BookModel
+    success_url = reverse_lazy('file_list')  # Redirect to the file list or a relevant page
+
+    def delete(self, request, *args, **kwargs):
+        if request.method == 'DELETE':
+            try:
+                file = self.get_object()
+                file.delete()
+                return JsonResponse({'success': True}, status=200)
+            except BookModel.DoesNotExist:
+                return JsonResponse({'error': 'File not found'}, status=404)
+        return JsonResponse({'error': 'Invalid request method'}, status=405)

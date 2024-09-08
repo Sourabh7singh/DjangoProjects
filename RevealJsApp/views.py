@@ -1,11 +1,11 @@
 import json
 import os
-from turtle import title
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
 from django.conf import settings
-from flask import redirect
+from django.views.generic.edit import DeleteView
+from django.urls import reverse_lazy
 from .models import slides
 class Index(View):
     def get(self, request):
@@ -57,3 +57,17 @@ def create_file(request):
     return JsonResponse({'success': False})
  
 
+# views.py
+
+class FileDeleteView(DeleteView):
+    model = slides
+    success_url = reverse_lazy('file_list') 
+    def delete(self, request, *args, **kwargs):
+        if request.method == 'DELETE':
+            try:
+                file = self.get_object()
+                file.delete()
+                return JsonResponse({'success': True}, status=200)
+            except slides.DoesNotExist:
+                return JsonResponse({'error': 'File not found'}, status=404)
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
