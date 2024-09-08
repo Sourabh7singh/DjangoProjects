@@ -150,7 +150,7 @@ const LanguageMap = {
 };
 function loadFileContent(fileId) {
     document.getElementById("file_id").value = fileId;
-    fetch(`/get-content/${fileId}`)
+    fetch(`/code-editor/get-content/${fileId}`)
         .then(response => response.json())
         .then(text => {
             let content = text['content'];
@@ -170,7 +170,7 @@ function saveFileContent() {
     const content = editor.getValue();
     const id = document.getElementById('file_id').value;
     const base64Content = btoa(content);
-    fetch('', {
+    fetch('/code-editor/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -194,7 +194,7 @@ function saveFileContent() {
 function createNewFile() {
     const fileName = prompt("Enter the new file name (without extension):");
     if (fileName) {
-        fetch('/create-file/', {
+        fetch('/code-editor/create-file/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -217,7 +217,7 @@ function createNewFile() {
 
 function previewFileContent() {
     const content = editor.getValue();
-    fetch('/preview-markdown/', {
+    fetch('/code-editor/preview-markdown/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -283,7 +283,7 @@ function runCode() {
         code: code
     });
 
-    fetch('/run_code/', { // Adjust the URL to your Django view endpoint
+    fetch('/code-editor/run_code/', { // Adjust the URL to your Django view endpoint
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',

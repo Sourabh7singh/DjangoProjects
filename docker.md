@@ -26,4 +26,6 @@ CMD ["bash"]
 docker build -t my-django-env .
 
 # run enviroment
-docker run -it -v $(pwd):/app my-django-env
+- docker run -it -v $(pwd):/app my-django-env
+- docker run -it -v "djangoprojects:/app" my-django-env
+
