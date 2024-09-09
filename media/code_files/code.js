@@ -1,6 +1,1 @@
-console.log("This");
-function test() {
-    console.log("This is example");
-}
-
-test();
+console.log("this is a text")

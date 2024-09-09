@@ -7,38 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Editor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles/codeEditor.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
     <script src="{% static 'scripts/deck.js' %}"></script>
-    <link rel="stylesheet" href="{% static 'styles/codeEditor.css' %}">
 </head>
 <body>
-    {% comment %} <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
-        <div class="container-fluid">
-            <!-- Brand or Logo -->
-            <a class="navbar-brand" href="/">Home</a>
-            
-            <!-- Toggler Button for Mobile View -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Navbar Links -->
-            <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/code-editor/">Code Editor</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/reveal/">Markdown Presentation</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-     {% endcomment %}
-     {% include "HomePage/navbar.html" %}
-
+    {% include "HomePage/navbar.html" %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <div class="navbar-nav">
@@ -69,19 +49,7 @@
 
     <div class="home">
         <input type="hidden" id="file_id">
-        <div class="file-list">
-            <h3>Files</h3>
-            <ul class="list-group">
-                {% for file in md_files %}
-                <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" style="cursor: pointer;" onclick="loadFileContent('{{ file.id }}')" value="{{ file.id }}">
-                    {{ file.file_name }}.{{ file.language }}
-                    <button class="btn btn-danger btn-sm" onclick="deleteFile({{ file.id }}, event)">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+        <div id="file-tree"></div>
 
         <div class="preview">
             <iframe src="" class="w-100 h-100 border-0"></iframe>
@@ -94,9 +62,137 @@
         </div>
     </div>
 
+    <script>
+        $(function() {
+            // Initialize jstree
+            $('#file-tree').jstree({
+                'core': {
+                    'data': {
+                        'url': '{% url "file-tree" %}',
+                        'dataType': 'json'
+                    },
+                    'themes': {
+                        'icons': true
+                    }
+                },
+                'plugins': ['types', 'state', 'contextmenu', 'dnd', 'types'],
+                'contextmenu': {
+                    'items': function (node) {
+                        return {
+                            'Create Folder': {
+                                'label': 'Create Folder',
+                                'action': function (obj) {
+                                    createNode(node, 'folder');
+                                }
+                            },
+                            'Create File': {
+                                'label': 'Create File',
+                                'action': function (obj) {
+                                    createNode(node, 'file');
+                                }
+                            },
+                            'Rename': {
+                                'label': 'Rename',
+                                'action': function (obj) {
+                                    $('#file-tree').jstree(true).edit(node);
+                                }
+                            },
+                            'Delete': {
+                                'label': 'Delete',
+                                'action': function (obj) {
+                                    deleteNode(node);
+                                }
+                            }
+                        };
+                    }
+                }
+            });
+        
+            // Handle renaming a node
+            $('#file-tree').on('rename_node.jstree', function (e, data) {
+                const newName = data.text; // Get the new name from jstree
+                const nodeId = data.node.id; // Get the node ID
+        
+                // Send the new name to the server
+                $.ajax({
+                    url: '{% url "rename-node" %}',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        'id': nodeId,
+                        'new_name': newName
+                    }),
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': csrf_token // Add CSRF token
+                    },
+                    success: function(response) {
+                        $('#file-tree').jstree(true).refresh(); // Refresh the tree after successful rename
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error renaming node:', error);
+                        // Revert the name change in jstree if there's an error
+                        $('#file-tree').jstree(true).rename_node(data.node, data.old);
+                    }
+                });
+            });
+        
+            // Function to create a new file or folder
+            function createNode(parentNode, type) {
+                let newName = prompt('Enter the name for the new ' + type + ':');
+                if (newName) {
+                    $.ajax({
+                        url: '{% url "create-node" %}',
+                        type: 'POST',
+                        data: JSON.stringify({
+                            'name': newName,
+                            'type': type,
+                            'parent': parentNode.id
+                        }),
+                        contentType: 'application/json',
+                        headers: {
+                            'X-CSRFToken': csrf_token // Add CSRF token
+                        },
+                        success: function(response) {
+                            $('#file-tree').jstree(true).refresh();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error creating node:', error);
+                        }
+                    });
+                }
+            }
+        
+            // Function to delete a node
+            function deleteNode(node) {
+                if (confirm('Are you sure you want to delete this item?')) {
+                    $.ajax({
+                        url: '{% url "delete-node" %}',
+                        type: 'POST',
+                        data: JSON.stringify({
+                            'id': node.id
+                        }),
+                        contentType: 'application/json',
+                        headers: {
+                            'X-CSRFToken': csrf_token // Add CSRF token
+                        },
+                        success: function(response) {
+                            $('#file-tree').jstree(true).refresh();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error deleting node:', error);
+                        }
+                    });
+                }
+            }
+        });
+        
+    </script>
+    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
 
 
 

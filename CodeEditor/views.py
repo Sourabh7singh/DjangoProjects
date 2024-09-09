@@ -3,13 +3,13 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render,redirect
 from django.views import View
-from .models import BookModel
+from .models import FileModel
 from .forms import *
 # views.py
 
 class Index(View):
     def get(self, request):
-        books = BookModel.objects.all()
+        books = FileModel.objects.all()
         return render(request, 'CodeEditor/index.html', {'md_files': books})
 
     def post(self, request):
@@ -19,7 +19,7 @@ class Index(View):
             file_name = data['file_name']
             content = data['content']
             language = data['language']
-            file = BookModel.objects.get(id=file_id)
+            file = FileModel.objects.get(id=file_id)
             file.file_name = file_name
             file.content = content
             file.language = language
@@ -27,10 +27,12 @@ class Index(View):
             return redirect('index')
         except Exception as e:
             print(f'Error saving file: {e}')
+            return JsonResponse({'error': 'Failed to save file'})
+
 
 class GetFileContent(View):
     def get(self, request, file_id):
-        file = BookModel.objects.get(id=file_id)
+        file = FileModel.objects.get(id=file_id)
         return JsonResponse({'file_name':file.file_name,'content': file.content,'language': file.language}) 
 
 def create_file(request):
@@ -38,7 +40,7 @@ def create_file(request):
     file_name = request.POST.get('file_name')
     print("Creating file here")
     if file_name:
-        BookModel.objects.create(file_name=file_name, content="")
+        FileModel.objects.create(file_name=file_name, content="")
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
@@ -118,7 +120,7 @@ from django.views.generic.edit import DeleteView
 from django.urls import reverse_lazy
 
 class FileDeleteView(DeleteView):
-    model = BookModel
+    model = FileModel
     success_url = reverse_lazy('file_list')  # Redirect to the file list or a relevant page
 
     def delete(self, request, *args, **kwargs):
@@ -127,6 +129,96 @@ class FileDeleteView(DeleteView):
                 file = self.get_object()
                 file.delete()
                 return JsonResponse({'success': True}, status=200)
-            except BookModel.DoesNotExist:
+            except FileModel.DoesNotExist:
                 return JsonResponse({'error': 'File not found'}, status=404)
         return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+
+from django.http import JsonResponse
+from django.views import View
+from .models import FileModel
+
+class FileTreeView(View):
+    def get(self, request):
+        def build_tree(node):
+            children = list(node.children.all())
+            if not children:
+                return {
+                    'id': node.id,
+                    'text': f"{node.file_name}{('.' + node.language) if node.language else ''}",
+                    'type': 'file' if not node.is_dir else 'folder'
+                }
+            return {
+                'id': node.id,
+                'text': node.file_name,
+                'type': 'folder',
+                'children': [build_tree(child) for child in children]
+            }
+        
+        # Assuming you want to start from the root nodes
+        root_nodes = FileModel.objects.filter(parent__isnull=True)
+        tree_data = [build_tree(node) for node in root_nodes]
+        print(tree_data)
+        return JsonResponse(tree_data, safe=False)
+
+
+from django.http import JsonResponse
+from django.views import View
+from .models import FileModel
+import json
+
+class CreateNodeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            name = data['name']
+            type = data['type']
+            parent_id = data['parent']
+            print(f"Creating node: {name}, {type}, {parent_id}")
+            parent = FileModel.objects.get(id=parent_id) if parent_id else None
+            if type == 'file':
+                file = FileModel(file_name=name, is_dir=False, parent=parent)
+            else:
+                file = FileModel(file_name=name, is_dir=True, parent=parent)
+            
+            file.save()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(f'Error creating node: {e}')
+            return JsonResponse({'status': 'error'}, status=400)
+
+class DeleteNodeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            node_id = data['id']
+            node = FileModel.objects.get(id=node_id)
+            node.delete()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(f'Error deleting node: {e}')
+            return JsonResponse({'status': 'error'}, status=400)
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import FileModel
+
+@csrf_exempt
+def rename_node(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        node_id = data.get('id')
+        new_name = data.get('new_name')
+
+        try:
+            file = FileModel.objects.get(id=node_id)
+            file.file_name = new_name
+            file.save()
+            return JsonResponse({'success': True})
+        except FileModel.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'File not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})

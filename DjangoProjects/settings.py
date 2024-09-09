@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'RevealJsApp',
     'CodeEditor',
     'HomePage',
-    'JstreeApplication',
+    # 'JstreeApplication',
 ]
 
 MIDDLEWARE = [

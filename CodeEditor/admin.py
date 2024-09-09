@@ -1,4 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from CodeEditor.models import FileModel
 
+# Register your models here.
+admin.site.register(FileModel)

@@ -23,5 +23,5 @@ urlpatterns = [
     path("",include('HomePage.urls')),
     path('code-editor/',include('CodeEditor.urls')),
     path('reveal/',include('RevealJsApp.urls')),
-    path('jstree/',include('JstreeApplication.urls')),
+    # path('jstree/',include('JstreeApplication.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
