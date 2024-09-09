@@ -10,7 +10,7 @@ from .forms import *
 class Index(View):
     def get(self, request):
         books = BookModel.objects.all()
-        return render(request, 'mdtoslide/index.html', {'md_files': books})
+        return render(request, 'CodeEditor/index.html', {'md_files': books})
 
     def post(self, request):
         try:
