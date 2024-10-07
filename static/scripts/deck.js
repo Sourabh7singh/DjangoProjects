@@ -10,7 +10,7 @@ require(['vs/editor/editor.main'], function() {
         automaticLayout: true,
     });
 
-    // Define snippets for each language
+    
     const snippets = {
         python: [
             {
@@ -109,7 +109,7 @@ require(['vs/editor/editor.main'], function() {
         ]
     };
 
-    // Register snippets for each language
+    
     for (let lang in snippets) {
         monaco.languages.registerCompletionItemProvider(lang, {
             provideCompletionItems: function(model, position) {
@@ -118,7 +118,7 @@ require(['vs/editor/editor.main'], function() {
         });
     }
 
-    // Add language workers
+    
     monaco.languages.register({ id: 'python' });
     monaco.languages.register({ id: 'javascript' });
     monaco.languages.register({ id: 'html' });
@@ -129,7 +129,7 @@ require(['vs/editor/editor.main'], function() {
     monaco.languages.register({ id: 'json' });
     monaco.languages.register({ id: 'typescript' });
 
-    // Repeat similar setup for other languages...
+    
 });
 
 
@@ -147,11 +147,13 @@ const LanguageMap = {
     'tsx': 'typescript'
 };
 function loadFileContent(fileId) {
+    
     document.getElementById("file_id").value = fileId;
     fetch(`/code-editor/get-content/${fileId}`)
         .then(response => response.json())
         .then(text => {
             let content = text['content'];
+            console.log(content);
             let language = text['language'];
             document.getElementById('language-select').value = language;
             changeLanguage();
@@ -159,6 +161,7 @@ function loadFileContent(fileId) {
             editor.setValue(content);
             editor.updateOptions({ readOnly: false });
             document.getElementById('file-name').value = text['file_name'];
+            document.getElementById('file_id').value = text['id'];
         });
 }
 
@@ -168,6 +171,7 @@ function saveFileContent() {
     const content = editor.getValue();
     const id = document.getElementById('file_id').value;
     const base64Content = btoa(content);
+    console.log(base64Content, selectedLanguage, fileName, id);
     fetch('/code-editor/', {
         method: 'POST',
         headers: {
@@ -243,11 +247,11 @@ function showFileList() {
     fileList.style.display = 'block';
 }
 
-// Save file with Ctrl+S
+
 document.addEventListener('keydown', function(event) {
     if (event.ctrlKey && event.key === 's') {
-        event.preventDefault(); // Prevent default save action
-        saveFileContent(); // Call save function
+        event.preventDefault(); 
+        saveFileContent(); 
     }
 });
 
@@ -255,12 +259,12 @@ document.addEventListener('keydown', function(event) {
 function changeLanguage() {
     const selectedLanguage = document.getElementById('language-select').value;
     if(selectedLanguage=="md"){
-        // document.getElementById("run").style.display = 'none';
+        
         document.getElementById("previewbtn").style.display = 'block';
         document.getElementById("backbtn").style.display = 'block';
     }
     else{
-        // document.getElementById("run").style.display = 'block';
+        
         document.getElementById("previewbtn").style.display = 'none';
         document.getElementById("backbtn").style.display = 'none';
     }
@@ -269,19 +273,19 @@ function changeLanguage() {
 
 
 function runCode() {
-    const code = editor.getValue(); // Get the code from the Monaco Editor
-    const language = document.getElementById('language-select').value; // Get the selected language
-    const fileName = document.getElementById('file-name').value; // Get the file name
-    // Show loader
+    const code = editor.getValue(); 
+    const language = document.getElementById('language-select').value; 
+    const fileName = document.getElementById('file-name').value; 
+    
     document.getElementById('loader').classList.remove('d-none');
 
-    // Prepare the data to send to the server
+    
     const data = new URLSearchParams({
         language: language,
         code: code
     });
 
-    fetch('/code-editor/run_code/', { // Adjust the URL to your Django view endpoint
+    fetch('/code-editor/run_code/', { 
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -299,7 +303,7 @@ function runCode() {
         }
         if (data.output) {
             outputContainer.innerText = `${fileName}: ${data.output}`;
-            // outputContainer.innerText = "Output: "+ "\n" + data.output;
+            
         } else if (data.error) {
             outputContainer.innerText = `Error: ${data.error}`;
         } else {
@@ -317,14 +321,14 @@ function runCode() {
         outputContainer.innerText = 'An error occurred.';
     })
     .finally(() => {
-        // Hide loader
+        
         document.getElementById('loader').classList.add('d-none');
     });
 }
 
 
 function deleteFile(fileId, event) {
-    event.stopPropagation(); // Prevent triggering the loadFileContent function
+    event.stopPropagation(); 
 
     if (confirm('Are you sure you want to delete this file?')) {
         fetch(`/code-editor/delete-file/${fileId}/`, {
@@ -338,7 +342,7 @@ function deleteFile(fileId, event) {
         .then(data => {
             if (data.success) {
                 alert('File deleted successfully!');
-                // Reload the file list or update the UI as needed
+                
                 window.location.reload();
             } else {
                 alert('Error deleting file.');

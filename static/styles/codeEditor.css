@@ -29,15 +29,15 @@
     flex: 1;
 }
 #output{
-    background-color: #1e1e1e; /* Dark background */
-    color: #00ff00; /* Green text color */
-    font-family: 'Courier New', Courier, monospace; /* Monospaced font */
+    background-color: #1e1e1e; 
+    color: #00ff00; 
+    font-family: 'Courier New', Courier, monospace; 
     padding: 10px;
     border-radius: 4px;
     box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    white-space: pre-wrap; /* Preserve whitespace */
+    white-space: pre-wrap; 
     height: 100%;
-    /* overflow: auto; Enable scrolling if content overflows */
+    
 }
 .spinner-border {
     margin-right: 5px;

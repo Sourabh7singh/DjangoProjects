@@ -3,6 +3,7 @@
 {% block title %}Md to Presentations{% endblock title %}
 
 {% block head %}
+
 <style>
     .home {
         height: calc(100vh - 56px - 100px);
@@ -44,45 +45,20 @@
         flex: 1;
     }
 
-    /* Resizer style */
+    
     .resizer {
         width: 10px;
         cursor: col-resize;
         position: absolute; 
-        {% comment %} background-color:black; {% endcomment %}
         top: 0;
         bottom: 0;
-        left: 350px; /* Initial position of the resizer */
+        left: 350px; 
         z-index: 1;
     }
 </style>
 {% endblock head %}
 
 {% block content %}
-{% comment %} <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
-    <div class="container-fluid">
-        <!-- Brand or Logo -->
-        <a class="navbar-brand" href="/">Home</a>
-        
-        <!-- Toggler Button for Mobile View -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <!-- Navbar Links -->
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="/code-editor/">Code Editor</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="/reveal/">Markdown Presentation</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav> {% endcomment %}
-
 
 {% include "HomePage/navbar.html" %}
 
@@ -124,7 +100,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" style="cursor: pointer;" onclick="loadFileContent('{{ file.id }}')" value="{{ file.id }}">
                     {{ file.title }}.md
                     <button class="btn btn-danger btn-sm ms-2" onclick="deleteFile('{{ file.id }}', event)">
-                        <i class="bi bi-trash"></i> <!-- Use Bootstrap Icons for the trash icon -->
+                        <i class="bi bi-trash"></i> 
                     </button>
                 </li>
             {% endfor %}
@@ -132,7 +108,7 @@
     </div>
     
 
-    <!-- Resizer between file list and content area -->
+    
     <div class="resizer" id="resizer"></div>
 
     <div class="preview" id="preview">
@@ -141,7 +117,7 @@
 
     <div class="content-area" id="content-area">
         <h3>File Content</h3>
-        <!-- Monaco Editor will be initialized in this div -->
+        
         <div id="editor"></div>
         <input type="hidden" id="file-name">
     </div>
@@ -150,7 +126,7 @@
 <script src="{% static 'scripts/myreveal.js' %}"></script>
 
 <script>
-    // Resizing logic
+    
     const resizer = document.getElementById('resizer');
     const fileList = document.getElementById('file-list');
     const contentArea = document.getElementById('content-area');

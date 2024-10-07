@@ -5,7 +5,7 @@ from django.shortcuts import render,redirect
 from django.views import View
 from .models import FileModel
 from .forms import *
-# views.py
+
 
 class Index(View):
     def get(self, request):
@@ -15,6 +15,7 @@ class Index(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
+            print(data)
             file_id = data['id']
             file_name = data['file_name']
             content = data['content']
@@ -33,10 +34,10 @@ class Index(View):
 class GetFileContent(View):
     def get(self, request, file_id):
         file = FileModel.objects.get(id=file_id)
-        return JsonResponse({'file_name':file.file_name,'content': file.content,'language': file.language}) 
+        return JsonResponse({'id':file.id,'file_name':file.file_name,'content': file.content,'language': file.language}) 
 
 def create_file(request):
-    # Create a new file via AJAX request
+    
     file_name = request.POST.get('file_name')
     print("Creating file here")
     if file_name:
@@ -65,38 +66,38 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def run_code(request):
     if request.method == 'POST':
-        code_type = request.POST.get('language')  # e.g., 'python', 'javascript'
-        code_content = request.POST.get('code')  # The actual code from the editor
+        code_type = request.POST.get('language')  
+        code_content = request.POST.get('code')  
 
-        # Ensure the media directory exists
+        
         media_dir = os.path.join('media', 'code_files')
         os.makedirs(media_dir, exist_ok=True)
 
-        # Save the code to a file in the media directory
+        
         file_name = os.path.join(media_dir, f"code.{code_type}")
         with open(file_name, 'w') as code_file:
             code_file.write(code_content)
         
-        # Map the language to the appropriate command
+        
         command_map = {
             'py': f"python3 code.{code_type}",
             'js': f"node code.{code_type}",
             'cpp': f"g++ code.{code_type} -o code && ./code",
-            # Add more mappings as needed
+            
         }
 
-        # Get the command to run based on the language
+        
         command = command_map.get(code_type)
 
         if command:
-            # Convert the volume path to an appropriate format for Docker
+            
             docker_volume_path = os.path.abspath('media').replace('\\', '/')
             code_files_path = os.path.join(docker_volume_path,"code_files")
             docker_command = (
                 f"docker run -v \"{code_files_path}:/app\" -w /app my-django-env bash -c \"{command}\""
             )
 
-            # Run the command in the Docker container
+            
             try:
                 result = subprocess.check_output(
                     docker_command,
@@ -114,14 +115,14 @@ def run_code(request):
         return JsonResponse({'error': 'Invalid request method'})
 
 
-# views.py
+
 from django.http import JsonResponse
 from django.views.generic.edit import DeleteView
 from django.urls import reverse_lazy
 
 class FileDeleteView(DeleteView):
     model = FileModel
-    success_url = reverse_lazy('file_list')  # Redirect to the file list or a relevant page
+    success_url = reverse_lazy('file_list')  
 
     def delete(self, request, *args, **kwargs):
         if request.method == 'DELETE':
@@ -157,7 +158,7 @@ class FileTreeView(View):
                 'children': [build_tree(child) for child in children]
             }
         
-        # Assuming you want to start from the root nodes
+        
         root_nodes = FileModel.objects.filter(parent__isnull=True)
         tree_data = [build_tree(node) for node in root_nodes]
         print(tree_data)
@@ -176,7 +177,6 @@ class CreateNodeView(View):
             name = data['name']
             type = data['type']
             parent_id = data['parent']
-            print(f"Creating node: {name}, {type}, {parent_id}")
             parent = FileModel.objects.get(id=parent_id) if parent_id else None
             if type == 'file':
                 file = FileModel(file_name=name, is_dir=False, parent=parent)

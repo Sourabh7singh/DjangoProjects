@@ -49,13 +49,13 @@
 
     <div class="home">
         <input type="hidden" id="file_id">
-        <div id="file-tree"></div>
+        <div id="file-tree" style="width:25%;"></div>
 
         <div class="preview">
             <iframe src="" class="w-100 h-100 border-0"></iframe>
         </div>
 
-        <div class="content-area">
+        <div class="content-area" style="width:75%;">
             <h3>File Content</h3>
             <div id="editor"></div>
             <input type="hidden" id="file-name">
@@ -64,7 +64,7 @@
 
     <script>
         $(function() {
-            // Initialize jstree
+            
             $('#file-tree').jstree({
                 'core': {
                     'data': {
@@ -107,13 +107,17 @@
                     }
                 }
             });
-        
-            // Handle renaming a node
+            
+            $('#file-tree').on('select_node.jstree', function (e, data) {
+                if (data.node.original.type === 'file') {
+                    loadFileContent(data.node.id);
+                }
+            });
+            
             $('#file-tree').on('rename_node.jstree', function (e, data) {
-                const newName = data.text; // Get the new name from jstree
-                const nodeId = data.node.id; // Get the node ID
-        
-                // Send the new name to the server
+                const newName = data.text; 
+                const nodeId = data.node.id; 
+                
                 $.ajax({
                     url: '{% url "rename-node" %}',
                     type: 'POST',
@@ -123,20 +127,20 @@
                     }),
                     contentType: 'application/json',
                     headers: {
-                        'X-CSRFToken': csrf_token // Add CSRF token
+                        'X-CSRFToken': csrf_token 
                     },
                     success: function(response) {
-                        $('#file-tree').jstree(true).refresh(); // Refresh the tree after successful rename
+                        $('#file-tree').jstree(true).refresh(); 
                     },
                     error: function(xhr, status, error) {
                         console.error('Error renaming node:', error);
-                        // Revert the name change in jstree if there's an error
+                        
                         $('#file-tree').jstree(true).rename_node(data.node, data.old);
                     }
                 });
             });
         
-            // Function to create a new file or folder
+            
             function createNode(parentNode, type) {
                 let newName = prompt('Enter the name for the new ' + type + ':');
                 if (newName) {
@@ -150,7 +154,7 @@
                         }),
                         contentType: 'application/json',
                         headers: {
-                            'X-CSRFToken': csrf_token // Add CSRF token
+                            'X-CSRFToken': csrf_token 
                         },
                         success: function(response) {
                             $('#file-tree').jstree(true).refresh();
@@ -162,7 +166,7 @@
                 }
             }
         
-            // Function to delete a node
+            
             function deleteNode(node) {
                 if (confirm('Are you sure you want to delete this item?')) {
                     $.ajax({
@@ -173,7 +177,7 @@
                         }),
                         contentType: 'application/json',
                         headers: {
-                            'X-CSRFToken': csrf_token // Add CSRF token
+                            'X-CSRFToken': csrf_token 
                         },
                         success: function(response) {
                             $('#file-tree').jstree(true).refresh();
@@ -187,103 +191,6 @@
         });
         
     </script>
-    
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-
-
-{% comment %} {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="csrf-token" content="{{ csrf_token }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Editor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
-    <script src="{% static 'scripts/deck.js' %}"></script>
-    <link rel="stylesheet" href="{% static 'styles/codeEditor.css' %}">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
-        <div class="container-fluid">
-            <!-- Brand or Logo -->
-            <a class="navbar-brand" href="/">Home</a>
-            
-            <!-- Toggler Button for Mobile View -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Navbar Links -->
-            <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/code-editor/">Code Editor</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/reveal/">Markdown Presentation</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    
-    
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <div class="navbar-nav">
-            <button class="btn btn-primary me-2 mb-2 mb-lg-0" onclick="saveFileContent()">Save</button>
-            <button class="btn btn-secondary me-2 mb-2 mb-lg-0" id="previewbtn" onclick="previewFileContent()">Preview</button>
-            <button class="btn btn-info me-2 mb-2 mb-lg-0 back-button" id="backbtn" onclick="showFileList()">Back to File List</button>
-            <button class="btn btn-success mb-2 mb-lg-0" onclick="createNewFile()">New File</button>
-        </div>
-        <div class="ms-auto d-flex align-items-center gap-3">
-            <button class="btn btn-warning d-flex justify-content-center align-items-center" id="run" onclick="runCode()">
-                <span class="spinner-border spinner-border-sm d-none" id="loader" role="status" aria-hidden="true"></span>
-                Run
-            </button>
-            <select style="cursor: pointer;" id="language-select" class="form-select" onchange="changeLanguage()">
-                <option value="md">Markdown</option>
-                <option value="js">JavaScript</option>
-                <option value="py">Python</option>
-                <option value="html">HTML</option>
-                <option value="css">CSS</option>
-                <option value="cpp">C++</option>
-                <option value="java">Java</option>
-                <option value="json">JSON</option>
-                <option value="tsx">TypeScript</option>
-            </select>
-        </div>
-    </div>
-</nav>
-
-<div class="home">
-    <input type="hidden" id="file_id">
-    <div class="file-list">
-        <h3>Files</h3>
-        <ul class="list-group">
-            {% for file in md_files %}
-            <li class="list-group-item list-group-item-action" style="cursor: pointer;" onclick="loadFileContent('{{ file.id }}')" value="{{ file.id }}">{{ file.file_name }}.{{file.language}}</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div class="preview">
-        <iframe src="" class="w-100 h-100 border-0"></iframe>
-    </div>
-
-    <div class="content-area">
-        <h3>File Content</h3>
-        <div id="editor"></div>
-        <input type="hidden" id="file-name">
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html> {% endcomment %}
